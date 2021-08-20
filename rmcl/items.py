@@ -15,7 +15,7 @@ except ImportError:
     render = None
 
 from . import api
-from .const import ROOT_ID, TRASH_ID, FileType
+from .const import ROOT_ID, TRASH_ID, FileType, RFC3339Nano
 from . import datacache
 from .exceptions import DocumentNotFound, VirtualItemError
 from .sync import add_sync
@@ -117,6 +117,10 @@ class Item:
     def mtime(self):
         return parse_datetime(self._metadata.get('ModifiedClient'))
 
+    @mtime.setter
+    def mtime(self, value):
+        self._metadata['ModifiedClient'] = value.strftime(RFC3339Nano)
+
     @property
     def virtual(self):
         return False
@@ -201,6 +205,7 @@ class Item:
             if folder.id == TRASH_ID:
                 return await client.delete(self)
         self.parent = TRASH_ID
+        self.mtime = now()
         await client.update_metadata(self)
 
     @add_sync

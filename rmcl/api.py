@@ -23,8 +23,7 @@ from .exceptions import (
     AuthError,
     DocumentNotFound,
     ApiError,)
-from .const import (RFC3339Nano,
-                    USER_AGENT,
+from .const import (USER_AGENT,
                     DEVICE_TOKEN_URL,
                     USER_TOKEN_URL,
                     USER_TOKEN_VALIDITY,
@@ -315,7 +314,6 @@ class Client:
         # Copy the metadata so that the object gets out of date and will be refreshed
         metadata = item._metadata.copy()
         metadata['Version'] += 1
-        metadata["ModifiedClient"] = now().strftime(RFC3339Nano)
         res = await self.request("PUT",
                                  "/document-storage/json/2/upload/update-status",
                                  body=[metadata])
@@ -341,6 +339,7 @@ class Client:
         if up_res.status_code >= 400:
             log.error(f"Upload failed with status {up_res.status_code}")
             raise ApiError(f"Upload failed with status {up_res.status_code}", response=up_res)
+        item.mtime = now()
         await self.update_metadata(item)
 
     @staticmethod
